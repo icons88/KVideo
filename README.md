@@ -153,7 +153,7 @@ docker run -d -p 3000:3000 \
 
 **本地开发：**
 在项目根目录创建 `.env.local` 文件：
-```bash
+```env
 NEXT_PUBLIC_SITE_NAME=我的视频平台
 NEXT_PUBLIC_SITE_TITLE=我的视频 - 聚合播放平台
 NEXT_PUBLIC_SITE_DESCRIPTION=专属视频聚合播放平台
