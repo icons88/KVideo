@@ -51,7 +51,7 @@ export function DesktopMoreMenu({
 
     const buttonRef = React.useRef<HTMLButtonElement>(null);
     const menuRef = React.useRef<HTMLDivElement>(null);
-    const [menuPosition, setMenuPosition] = React.useState({ top: 0, left: 0, maxHeight: 'none', openUpward: false });
+    const [menuPosition, setMenuPosition] = React.useState({ top: 0, left: 0, maxHeight: 'none', openUpward: false, align: 'right' as 'left' | 'right' });
     const [isAdFilterOpen, setAdFilterOpen] = React.useState(false);
 
     const AD_FILTER_LABELS: Record<string, string> = {
@@ -86,12 +86,46 @@ export function DesktopMoreMenu({
 
         if (!isRotated) {
             // Normal Mode: Non-rotated (Portrait on Mobile)
-            // Center the menu on screen for better visibility and touch access
+            // Use Viewport Coordinates but position relative to button (User Request: "Below button")
+            // And use Body Portal to escape container clipping
+            const buttonRect = buttonRef.current.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
+
+            const spaceBelow = viewportHeight - buttonRect.bottom - 10;
+            const spaceAbove = buttonRect.top - 10;
+
+            const estimatedMenuHeight = 450;
+            const actualMenuHeight = menuRef.current?.offsetHeight || estimatedMenuHeight;
+
+            const openUpward = spaceBelow < Math.min(actualMenuHeight, 300) && spaceAbove > spaceBelow;
+            const maxHeight = openUpward
+                ? Math.min(spaceAbove, actualMenuHeight)
+                : Math.min(spaceBelow, viewportHeight * 0.7);
+
+            // Smart Horizontal Alignment:
+            // If button is on the left half of screen, align menu's left edge to button's left.
+            // If button is on the right half of screen, align menu's right edge to button's right.
+            const isLeftHalf = buttonRect.left < viewportWidth / 2;
+            const align = isLeftHalf ? 'left' : 'right';
+
+            let left = isLeftHalf ? buttonRect.left : buttonRect.right;
+
+            // Boundary clamping
+            if (isLeftHalf) {
+                left = Math.max(left, 10);
+            } else {
+                left = Math.min(left, viewportWidth - 10);
+            }
+
             setMenuPosition({
-                top: window.innerHeight / 2,
-                left: window.innerWidth / 2,
-                maxHeight: '80vh',
-                openUpward: false
+                top: openUpward
+                    ? buttonRect.top - 10
+                    : buttonRect.bottom + 10,
+                left: left,
+                maxHeight: `${maxHeight}px`,
+                openUpward: openUpward,
+                align: align
             });
         } else {
             // Rotated Mode: Use Container Coordinates (offset loop) and Portal to Container
@@ -125,14 +159,16 @@ export function DesktopMoreMenu({
                     top: top - 10,
                     left: left + buttonWidth,
                     maxHeight: `${maxHeight}px`,
-                    openUpward: true
+                    openUpward: true,
+                    align: 'right'
                 });
             } else {
                 setMenuPosition({
                     top: top + buttonHeight + 10,
                     left: left + buttonWidth,
                     maxHeight: `${maxHeight}px`,
-                    openUpward: false
+                    openUpward: false,
+                    align: 'right'
                 });
             }
         }
@@ -174,9 +210,8 @@ export function DesktopMoreMenu({
             style={{
                 top: `${menuPosition.top}px`, // Always use absolute top
                 left: `${menuPosition.left}px`,
-                // If not rotated (Centered), translate -50% -50% to center
-                // If rotated (Side), translate -100% 0 (or whatever previous logic was)
-                transform: !isRotated ? 'translate(-50%, -50%)' : 'translateX(-100%)',
+                // If aligned right, shift left by 100% of own width. If aligned left, stay at 0.
+                transform: menuPosition.align === 'right' ? 'translateX(-100%)' : 'none',
                 maxHeight: menuPosition.maxHeight,
                 bottom: 'auto'
             }}
