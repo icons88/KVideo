@@ -438,5 +438,21 @@
         "group": "normal",
         "enabled": true,
         "priority": 55
+    },
+    {
+        "id": "ikun",
+        "name": "iKun资源",
+        "baseUrl": "https://ikunzyapi.com/api.php/provide/vod",
+        "group": "normal",
+        "enabled": true,
+        "priority": 56
+    },
+    {
+        "id": "mozhua",
+        "name": "魔爪资源",
+        "baseUrl": "https://mozhuazy.com/api.php/provide/vod",
+        "group": "normal",
+        "enabled": true,
+        "priority": 57
     }
 ]
